@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本地音乐处理</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">文件</h3>
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-zone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="drop-zone-text">拖拽音频文件到此处</p>
+          <p class="drop-zone-hint">或点击选择文件</p>
+          <input type="file" id="fileInput" accept="audio/*" hidden>
+        </div>
+      </div>
+
+      <div id="fileInfo" class="sidebar-section hidden">
+        <h3 class="sidebar-title">文件信息</h3>
+        <div class="file-info-grid">
+          <span class="info-label">文件名</span>
+          <span class="info-value" id="fileName">—</span>
+          <span class="info-label">时长</span>
+          <span class="info-value" id="fileDuration">—</span>
+          <span class="info-label">采样率</span>
+          <span class="info-value" id="fileSampleRate">—</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">倍速</h3>
+        <div class="speed-presets" id="speedPresets">
+          <button class="speed-btn" data-speed="0.25">0.25×</button>
+          <button class="speed-btn" data-speed="0.5">0.5×</button>
+          <button class="speed-btn active" data-speed="1.0">1×</button>
+          <button class="speed-btn" data-speed="1.25">1.25×</button>
+          <button class="speed-btn" data-speed="1.5">1.5×</button>
+          <button class="speed-btn" data-speed="2.0">2×</button>
+          <button class="speed-btn" data-speed="4.0">4×</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">处理</h3>
+        
+        <div class="control-row">
+          <button id="btnReverse" class="control-btn" title="??">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 4v6h6"/>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            倒放
+          </button>
+          <button id="btnTrim" class="control-btn" title="??????" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            </svg>
+            裁剪
+          </button>
+        </div>
+        
+        <div class="control-group">
+          <label class="control-label">变调</label>
+          <div class="pitch-controls">
+            <button id="btnPitchDown" class="pitch-btn" title="降调" disabled>-</button>
+            <span id="pitchValue" class="pitch-value">0</span>
+            <button id="btnPitchUp" class="pitch-btn" title="升调" disabled>+</button>
+            <span class="pitch-unit">半音</span>
+          </div>
+        </div>
+        
+        <button id="btnProcess" class="process-btn" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+         应用处理
+       </button>
+      <div class="control-row" style="margin-top:8px">
+        <button id="btnLoop" class="control-btn" title="循环播放">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="17 1 21 5 17 9"/>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+            <polyline points="7 23 3 19 7 15"/>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+          循环
+        </button>
+      </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3 class="sidebar-title">导出</h3>
+        <button id="btnExport" class="process-btn" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          导出 WAV
+        </button>
+      </div>
+ 
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-section">
+        <p class="sidebar-footer">本地音乐处理 v1.0</p>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main">
+      <!-- Waveform Area -->
+      <div id="waveformContainer">
+        <canvas id="waveformCanvas"></canvas>
+        <div id="waveformPlaceholder" class="placeholder-text">
+          <p>加载音频文件后显示波形</p>
+        </div>
+      </div>
+
+      <!-- Transport Controls -->
+      <div id="transportBar">
+        <div class="transport-buttons">
+          <button id="btnPlay" class="transport-btn" title="播放 (Space)" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          </button>
+          <button id="btnPause" class="transport-btn" title="暂停" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button id="btnStop" class="transport-btn" title="停止" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16"/></svg>
+          </button>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+            <div id="progressThumb" class="progress-thumb"></div>
+          </div>
+          <div class="time-display">
+            <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Toggle -->
+      <div id="previewBar">
+        <div class="preview-toggle" id="previewToggle">
+          <button class="preview-btn active" data-mode="original" id="btnOriginal">原始</button>
+          <button class="preview-btn" data-mode="processed" id="btnProcessed" disabled>处理</button>
+        </div>
+        <span class="preview-hint" id="previewHint">对比原始与处理结果</span>
+      </div>
+
+      <!-- Status Bar -->
+      <div id="statusBar">
+        <span id="statusText">就绪</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/audio-engine.js"></script>
+  <script src="js/waveform.js"></script>
+  <script src="js/processors.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
